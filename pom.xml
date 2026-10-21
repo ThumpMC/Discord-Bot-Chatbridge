@@ -78,7 +78,7 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
-                            <!-- No dependencies need to be shaded anymore -->
+                            <!-- Server-provided plugin APIs use provided scope; shade runtime libraries such as JDA. -->
                             <filters>
                                 <filter>
                                     <artifact>*:*</artifact>
