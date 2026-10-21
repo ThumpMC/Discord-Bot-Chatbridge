@@ -1,0 +1,45 @@
+name: Build and verify Chatbridge
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '8'
+          cache: maven
+
+      - name: Build with Maven
+        run: mvn --batch-mode --no-transfer-progress clean package
+
+      - name: Verify duplicate JPerms command is absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          jarfile="$(find target -maxdepth 1 -type f -name '*.jar' ! -name '*original*' | head -n 1)"
+          test -n "$jarfile"
+          if jar tf "$jarfile" | grep -q '^com/johnymuffin/jperms/beta/JohnyPermsCommand.class$'; then
+            echo "ERROR: Chatbridge still bundles the duplicate JPerms command class."
+            exit 1
+          fi
+          echo "Verified: duplicate JPerms command class is absent from $jarfile"
+
+      - name: Upload verified JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: Discord-Bot-Chatbridge
+          path: target/*.jar
+          if-no-files-found: error
