@@ -116,6 +116,12 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <groupId>com.johnymuffin.jperms</groupId>
+            <artifactId>beta</artifactId>
+            <version>1.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
             <groupId>net.dv8tion</groupId>
             <artifactId>JDA</artifactId>
             <version>4.4.1_353</version>
