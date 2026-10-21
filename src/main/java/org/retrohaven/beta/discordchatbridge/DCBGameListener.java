@@ -6,6 +6,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerListener;
 import org.bukkit.event.player.PlayerQuitEvent;
 
+import com.johnymuffin.jperms.beta.JohnyPerms;
+import com.johnymuffin.jperms.core.models.PermissionsUser;
 import org.retrohaven.beta.discordchatbridge.DiscordChatBridge;
 
 import java.io.IOException;
@@ -102,8 +104,11 @@ public class DCBGameListener extends PlayerListener {
         } else {
             String chatMessage = plugin.getConfig().getConfigString("message.game-chat-message");
             chatMessage = chatMessage.replace("%messageAuthor%", event.getPlayer().getName());
+            chatMessage = chatMessage.replace("%prefix%", getPlayerPrefix(event.getPlayer().getUniqueId()));
             chatMessage = chatMessage.replace("%message%", event.getMessage());
             chatMessage = sanitizeMessage(chatMessage);
+            // Discord messages should not contain Minecraft formatting codes.
+            chatMessage = chatMessage.replaceAll("(?i)[§&][0-9A-FK-OR]", "");
             plugin.getDiscordCore().getDiscordBot().discordSendToChannel(plugin.getConfig().getConfigString("channel-id"), chatMessage);
         }
 
@@ -112,6 +117,24 @@ public class DCBGameListener extends PlayerListener {
             String relayMessage = "GAME_CHAT " + event.getPlayer().getName() + " " + event.getMessage();
             plugin.getRelayServer().broadcast(relayMessage);
         }
+    }
+
+
+    private String getPlayerPrefix(java.util.UUID uuid) {
+        try {
+            if (Bukkit.getPluginManager().isPluginEnabled("JPerms")) {
+                PermissionsUser user = JohnyPerms.getJPermsAPI().getUser(uuid);
+                if (user != null && user.getPrefix() != null && !user.getPrefix().isEmpty()) {
+                    return user.getPrefix();
+                }
+                if (user != null && user.getGroup() != null && user.getGroup().getPrefix() != null) {
+                    return user.getGroup().getPrefix();
+                }
+            }
+        } catch (Exception ignored) {
+            // If JPerms is unavailable, send the message without a prefix.
+        }
+        return "";
     }
 
     public String sanitizeMessage(String chatMessage) {
